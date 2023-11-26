@@ -43,26 +43,26 @@ datos<-read.csv("Datos.csv")
 datos$Tiempo.de.llegada <- as.POSIXlt(datos$Tiempo.de.llegada, format = "%H:%M:%S")
 tiempoDellegadas <- as.numeric(datos$Tiempo.de.llegada, units = "secs")
 
-tiempos_entre_llegadas <- diff(datos$Tiempo.de.llegada)
-tiempos_entre_llegadas_en_segundos <- as.numeric(tiempos_entre_llegadas, units = "secs")
-tiempos_entre_llegadas_en_segundos <- tiempos_entre_llegadas_en_segundos[-21]
+tiemposEntreLlegadasSec <- as.numeric(diff(datos$Tiempo.de.llegada), units = "secs")
+tiemposEntreLlegadasSec <- tiemposEntreLlegadasSec[-21]
+sd(tiemposEntreLlegadasSec)
 ```
 Es necesaria la eliminacion del dato numero 21 ya que es el primer dato del segundo dia, el tiempo 0 es partir de que se hace el primer pedido
 
 ## Analisis de distribucion mas apropiada
 
 ```{r}
-plotdist(tiempos_entre_llegadas_en_segundos,histo=TRUE,demp=TRUE)
+plotdist(tiemposEntreLlegadasSec,histo=TRUE,demp=TRUE)
 ```
 Podriamos decir que los datos tienen forma cercana a la distribucion exponencial
 ```{r}
-descdist(tiempos_entre_llegadas_en_segundos)
+descdist(tiemposEntreLlegadasSec)
 ```
 Se puede ver que los datos estan cerca tanto de la distribucion gamma como de la distribucion exponencial asi que sobre esas dos haremos las pruebas respectivas para ver cual es la mas adecuada.
 
 ```{r}
-fit_gamma <- fitdist(tiempos_entre_llegadas_en_segundos,"gamma")
-fit_exp <- fitdist(tiempos_entre_llegadas_en_segundos,"exp")
+fit_gamma <- fitdist(tiemposEntreLlegadasSec,"gamma")
+fit_exp <- fitdist(tiemposEntreLlegadasSec,"exp")
 
 ```
 
@@ -77,7 +77,7 @@ ppcomp (list(fit_gamma,fit_exp), legendtext = plot.legend)
 
 
 
-## Prueba de hipotesis
+## Prueba de bondad de ajuste
 
 Observando las gráficas, se puede notar que la distribución exponencial se asemeja más a la distribución de los datos. Se llevará a cabo una prueba de Kolmogorov-Smirnov con un nivel de confianza del 95%, utilizando un valor crítico de D=0.1943, esto con el fin de determinar si los datos si se distribuyen como tales distribuciones
 
@@ -110,7 +110,7 @@ descdist(tiempoPedidoSec)
 
 Se puede ver que los datos estan cerca tanto de la distribucion uniforme, normal, gamma y lognormal asi que sobre estas distribuciones se haran las pruebas de ajuste.
 
-```{r}
+```{r warning=FALSE}
 fit_normal <- fitdist(tiempoPedidoSec,"norm")
 fit_unif <- fitdist(tiempoPedidoSec,"unif")
 fit_gamma <- fitdist(tiempoPedidoSec,"gamma")
@@ -125,7 +125,7 @@ qqcomp (list(fit_normal,fit_unif,fit_gamma,fit_lnorm), legendtext = plot.legend)
 ppcomp (list(fit_normal,fit_unif,fit_gamma,fit_lnorm), legendtext = plot.legend)
 ```
 
-## Prueba de hipotesis
+## Prueba de bondad de ajuste
 A ojo se puede decir que la que mas se adapta a los datos es la distribucion normal pero aun asi haremos la prueba Kolmogorov-Smirnov con un valor de confianza del 95% para un valor critico de D = 0.1904.
 ```{r}
 gofstat(list(fit_normal,fit_unif,fit_gamma,fit_lnorm))
@@ -177,9 +177,9 @@ fit_gamma <- fitdist(datosEstante$tiemposSec,"gamma")
 plot(fit_gamma)
 
 ```
-Si, los datos se ven bastante cerca de la distribucion gamma, ahora haremos la prueba de hipotesis.
+Si, los datos se ven bastante cerca de la distribucion gamma, ahora haremos la Prueba de bondad de ajuste.
 
-### Prueba de hipotesis
+### Prueba de bondad de ajuste
 Se llevará a cabo una prueba de Kolmogorov-Smirnov con un nivel de confianza del 95%, n=22 utilizando un valor crítico de D=0.270, esto con el fin de determinar si los datos si se distribuyen como tales distribuciones
 
 ```{r}
@@ -219,7 +219,7 @@ fit_gamma <- fitdist(datosRestaurante$tiemposSec,"gamma")
 
 ```{r}
 par(mfrow=c(2,2))
-plot.legend <- c("norm","unif","gamma","lnorm")
+plot.legend <- c("logis","norm","lnorm","gamma")
 denscomp(list(fit_logis,fit_norm,fit_lnorm,fit_gamma), legendtext = plot.legend)
 cdfcomp (list(fit_logis,fit_norm,fit_lnorm,fit_gamma), legendtext = plot.legend)
 qqcomp (list(fit_logis,fit_norm,fit_lnorm,fit_gamma), legendtext = plot.legend)
@@ -227,14 +227,89 @@ ppcomp (list(fit_logis,fit_norm,fit_lnorm,fit_gamma), legendtext = plot.legend)
 ```
 Diria que las que mas se ajustan serian la distribucion gamma y la distribucion normal.
 
-### Prueba de hipotesis
+### Prueba de bondad de ajuste
 Se llevará a cabo una prueba de Kolmogorov-Smirnov con un nivel de confianza del 95%, n=29 utilizando un valor crítico de D=0.240, esto con el fin de determinar si los datos si se distribuyen como tales distribuciones
 
 ```{r}
 gofstat(list(fit_logis,fit_norm,fit_lnorm,fit_gamma))
 ```
-Ninguna de las distribuciones es decartada por medio de la prueba Kolmogorov Smirnov asi que nos basaremos completamente en la prueba de la informacion, dando esto como resultado decidir que los datos se distribuyen como logistic
+Ninguna de las distribuciones es decartada por medio de la prueba Kolmogorov Smirnov asi que nos basaremos completamente en la prueba de la informacion, e incluso si usamos el criterio grafico la normal y la logistic se ven bastante similares dando esto como resultado decidir que los datos se distribuyen como logistic
 
 ```{r}
 summary(fit_logis)
+```
+
+```{r}
+datos$Le.entregan.el.pedido <- as.POSIXlt(datos$Le.entregan.el.pedido, format = "%H:%M:%S")
+
+cortar<-datos[datos$Tipo=="estante",]
+
+tiempoTotalEnElsistemas<-as.numeric(difftime(cortar$Le.entregan.el.pedido, cortar$Tiempo.de.llegada, units = "secs"))
+
+mean(tiempoTotalEnElsistemas/60)
+tiempoTotalEnElsistemas
+
+```
+
+# Calculo de tamaños de muestra para las respectivas variables
+
+```{r}
+tamanhoN <- function(datos,presicion) {
+  desviation <- sd(datos)
+  Value_Z <- qnorm(0.975)
+  n<-(Value_Z*desviation/presicion)^2
+  return(n)
+}
+```
+## Tamaño de muestra el tiempo entre llegadas
+Tomando una presicion de 53 segundos con una confianza del 95% obtenemos el siguiente valor para el tamaño de muestra para el tiempo entre llegadas.
+
+```{r}
+nTiempoEntreLlegadas <- tamanhoN(tiemposEntreLlegadasSec,53)
+ceiling(nTiempoEntreLlegadas)
+```
+
+## Tamaño de muestra para el tiempo de pedidos
+Tomando una presicion de 25 segundos con una confianza del 95% obtenemos el siguiente valor para el tamaño de muestra para el tiempo entre pedidos.
+
+```{r}
+nTiempoPedido <- tamanhoN(tiempoPedidoSec,25)
+ceiling(nTiempoPedido)
+```
+
+## Tamaño de muestra tiempo de servicio estante
+Tomando una presicion de 17 segundos con una confianza del 95% obtenemos el siguiente valor para el tamaño de muestra para el tiempo de servicio del estante.
+
+```{r}
+nTiempoServicioEstante <- tamanhoN(datosEstante$tiemposSec,17)
+ceiling(nTiempoServicioEstante)
+```
+
+## Tamaño de muestra tiempo de servicio restaurante
+Tomando una presicion de 93 segundos con una confianza del 95% obtenemos el siguiente valor para el tamaño de muestra para el tiempo de servicio del restaurante.
+
+```{r}
+nTiempoServicioRestaurante <- tamanhoN(datosRestaurante$tiemposSec,93)
+ceiling(nTiempoServicioRestaurante)
+```
+# Arbol de probabilidades - elementos simplificados
+Probabilidades de que compre algo del estante o del restaurante
+
+```{r}
+tipoDePedido<-table(datosASeparar$tipo)
+tipoDePedido/sum(tipoDePedido)
+```
+Las probabilidades de los productos del estante
+
+```{r}
+probEstantes <- datos[datos$Tipo=="estante",]
+tableProbEst <- table(probEstantes$Tipo.de.pedido)
+tableProbEst/sum(tableProbEst)
+```
+Las probabilidades de los productos del restaurante
+
+```{r}
+probRestaurante <- datos[datos$Tipo=="restaurante",]
+tableProbRest <- table(probRestaurante$Tipo.de.pedido)
+tableProbRest/sum(tableProbRest)
 ```
