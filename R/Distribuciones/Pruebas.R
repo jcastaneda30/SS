@@ -12,7 +12,9 @@ library("moments")
 
 datosTiempoEntreLlegadas <- read.table("TiemposEntreLlegadasSec.txt")
 datosTiempoEntreLlegadas$V1 <- as.numeric(datosTiempoEntreLlegadas$V1)
+
 mean(datosTiempoEntreLlegadas$V1)
+
 plotdist(datosTiempoEntreLlegadas$V1,histo=TRUE,demp=TRUE)
 descdist(datosTiempoEntreLlegadas$V1 )
 fit_gamma <- fitdist(datosTiempoEntreLlegadas$V1,"gamma")
@@ -28,7 +30,9 @@ gofstat(list(fit_gamma,fit_exp))
 
 #Se concluye que se ajusta a una distribucion exponencial ya que no se rechaza por Kolmorogov smirnov
 #Se toma la exponencial ya que es la que minimiza los criterios de informacion
-par(mfrow=c(1,1))
+
+
+par(mfrow=c(2,2))
 plot.legend <- c("gamma","exp")
 denscomp(list(fit_gamma,fit_exp), legendtext = plot.legend)
 cdfcomp (list(fit_gamma,fit_exp), legendtext = plot.legend)

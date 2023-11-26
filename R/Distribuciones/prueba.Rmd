@@ -1,0 +1,229 @@
+---
+title: "Analisis de datos trabajo simulacion"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3  # upto three depths of headings (specified by #, ## and ###)
+    number_sections: true  ## if you want number sections at each table header
+    theme: united  # many options for theme, this one is my favorite.
+    highlight: tango  # specifies the syntax highlighting style
+---
+Autores:
+Maria Fernanda Calle Agudelo - mcalleag@unal.edu.co\n
+
+Jaider Castañeda Villa - jcastanedavi@unal.edu.co\n
+
+Mónica Sofía Restrepo León - morestrepol@unal.edu.co\n
+
+Luis Alejandro Varela Ojeda - luvarelao@unal.edu.co\n
+
+# Introduccion
+
+En este documento se llevaran a cabo los respectivos analisis sobre los datos tomados con el fin de determinar a que distribucion pertenecen estos
+
+
+
+# Cargar paquetes
+```{r results='hide', message=FALSE, warning=FALSE}
+library("MASS")
+library("car")
+library("fitdistrplus")
+library("moments")
+```
+
+# Cargar datos
+
+```{r}
+datos<-read.csv("Datos.csv")
+```
+
+# Tiempo entre llegadas
+```{r}
+datos$Tiempo.de.llegada <- as.POSIXlt(datos$Tiempo.de.llegada, format = "%H:%M:%S")
+tiempoDellegadas <- as.numeric(datos$Tiempo.de.llegada, units = "secs")
+
+tiempos_entre_llegadas <- diff(datos$Tiempo.de.llegada)
+tiempos_entre_llegadas_en_segundos <- as.numeric(tiempos_entre_llegadas, units = "secs")
+tiempos_entre_llegadas_en_segundos <- tiempos_entre_llegadas_en_segundos[-21]
+```
+Es necesaria la eliminacion del dato numero 21 ya que es el primer dato del segundo dia, el tiempo 0 es partir de que se hace el primer pedido
+
+## Analisis de distribucion mas apropiada
+
+```{r}
+plotdist(tiempos_entre_llegadas_en_segundos,histo=TRUE,demp=TRUE)
+```
+Podriamos decir que los datos tienen forma cercana a la distribucion exponencial
+```{r}
+descdist(tiempos_entre_llegadas_en_segundos)
+```
+Se puede ver que los datos estan cerca tanto de la distribucion gamma como de la distribucion exponencial asi que sobre esas dos haremos las pruebas respectivas para ver cual es la mas adecuada.
+
+```{r}
+fit_gamma <- fitdist(tiempos_entre_llegadas_en_segundos,"gamma")
+fit_exp <- fitdist(tiempos_entre_llegadas_en_segundos,"exp")
+
+```
+
+```{r}
+par(mfrow=c(2,2))
+plot.legend <- c("gamma","exp")
+denscomp(list(fit_gamma,fit_exp), legendtext = plot.legend)
+cdfcomp (list(fit_gamma,fit_exp), legendtext = plot.legend)
+qqcomp (list(fit_gamma,fit_exp), legendtext = plot.legend)
+ppcomp (list(fit_gamma,fit_exp), legendtext = plot.legend)
+```
+
+
+
+## Prueba de hipotesis
+
+Observando las gráficas, se puede notar que la distribución exponencial se asemeja más a la distribución de los datos. Se llevará a cabo una prueba de Kolmogorov-Smirnov con un nivel de confianza del 95%, utilizando un valor crítico de D=0.1943, esto con el fin de determinar si los datos si se distribuyen como tales distribuciones
+
+```{r}
+gofstat(list(fit_gamma,fit_exp))
+```
+Como se puede ver los datos se distribuyen como ambas distribuciones, por lo tanto se usaran los criterios de la informacion para determinar cual distribucion se usara en el modelo, siendo esta la distribucion exponencial.
+
+
+# Tiempo de pedido
+Esta variable trata sobre cuanto tiempo tarda una persona en hacer su pedido sin tener en cuenta que tipo de pedido esta realizando.
+
+```{r}
+datos$Termina.de.hacer.el.pedido <- as.POSIXlt(datos$Termina.de.hacer.el.pedido, format = "%H:%M:%S")
+tiempoPedidoSec <- as.numeric(difftime(datos$Termina.de.hacer.el.pedido, datos$Tiempo.de.llegada, units = "secs"))
+```
+
+## Analisis de distribucion mas apropiada
+
+```{r}
+plotdist(tiempoPedidoSec,histo=TRUE,demp=TRUE)
+```
+Podriamos decir que los datos se asemejan a algo como una normal pero no se puede decir con certeza.
+```{r}
+descdist(tiempoPedidoSec)
+```
+
+Se puede ver que los datos estan cerca tanto de la distribucion uniforme, normal, gamma y lognormal asi que sobre estas distribuciones se haran las pruebas de ajuste.
+
+```{r}
+fit_normal <- fitdist(tiempoPedidoSec,"norm")
+fit_unif <- fitdist(tiempoPedidoSec,"unif")
+fit_gamma <- fitdist(tiempoPedidoSec,"gamma")
+fit_lnorm <- fitdist(tiempoPedidoSec,"lnorm")
+```
+```{r}
+par(mfrow=c(2,2))
+plot.legend <- c("norm","unif","gamma","lnorm")
+denscomp(list(fit_normal,fit_unif,fit_gamma,fit_lnorm), legendtext = plot.legend)
+cdfcomp (list(fit_normal,fit_unif,fit_gamma,fit_lnorm), legendtext = plot.legend)
+qqcomp (list(fit_normal,fit_unif,fit_gamma,fit_lnorm), legendtext = plot.legend)
+ppcomp (list(fit_normal,fit_unif,fit_gamma,fit_lnorm), legendtext = plot.legend)
+```
+
+## Prueba de hipotesis
+A ojo se puede decir que la que mas se adapta a los datos es la distribucion normal pero aun asi haremos la prueba Kolmogorov-Smirnov con un valor de confianza del 95% para un valor critico de D = 0.1904.
+```{r}
+gofstat(list(fit_normal,fit_unif,fit_gamma,fit_lnorm))
+```
+
+Se descarta la distribucion uniforme por el criterio de Kolmogorov-Smirnov y para determinar cual es la distribucion mas adecuada nos basaremos en el criterio visual ya que sus resultados son bastante similares dando por escogida la distribucion normal.
+
+# Tiempo de servicio
+
+Aqui el tiempo de servicio se divide en dos categorias aquellas en las que el pedido debe ser enviado a la cocina y aquellos donde compran algo y se les entrega sin tener que esperar demasiado a esta categoria se le llama estante.
+
+```{r}
+datos$Le.entregan.el.pedido <- as.POSIXlt(datos$Le.entregan.el.pedido, format = "%H:%M:%S")
+tiempoDeServicio <- as.numeric(difftime(datos$Le.entregan.el.pedido, datos$Termina.de.hacer.el.pedido, units = "secs"))
+datosASeparar <- data.frame(
+  tiemposSec = tiempoDeServicio,
+  tipo       = datos$Tipo
+)
+```
+
+## Tiempo de servicio para el area del estante
+
+Esto se refiere a cuanto tiempo se tarda en entregarle el producto a alguien que va a comprar algo del estante tipo mecato y similares que ya estan hechos.
+
+### Analisis de distribucion mas apropiada
+
+```{r}
+datosEstante <- datosASeparar[datosASeparar$tipo=="estante",]
+datosEstante$tiemposSec <- as.numeric(datosEstante$tiemposSec)
+plotdist(datosEstante$tiemposSec,histo=TRUE,demp=TRUE)
+```
+Dificil de saber solo a ojo.
+
+```{r}
+descdist(datosEstante$tiemposSec)
+```
+Se puede ver que los datos estan cerca de la distribucion gamma asi que sobre esa haremos las pruebas respectivas para ver cual es la mas adecuada.
+
+```{r warning=FALSE, error=FALSE}
+fit_gamma <- fitdist(datosEstante$tiemposSec,"gamma")
+
+```
+
+```{r}
+plot(fit_gamma)
+
+```
+Si, los datos se ven bastante cerca de la distribucion gamma, ahora haremos la prueba de hipotesis.
+
+### Prueba de hipotesis
+Se llevará a cabo una prueba de Kolmogorov-Smirnov con un nivel de confianza del 95%, n=22 utilizando un valor crítico de D=0.270, esto con el fin de determinar si los datos si se distribuyen como tales distribuciones
+
+```{r}
+gofstat(fit_gamma)
+```
+Se puede decir que los datos se distribuyen como Gamma ya que estan dentro del area de no rechazo en la prueba Kolmogorov.
+
+
+## Tiempo de servicio para el area del restaurante
+
+Esto se refiere a cuanto tiempo se tarda en entregarle el producto a alguien que va a comprar algo del estante tipo mecato y similares que ya estan hechos.
+
+### Analisis de distribucion mas apropiada
+
+```{r}
+datosRestaurante <- datosASeparar[datosASeparar$tipo=="restaurante",]
+datosRestaurante$tiemposSec <- as.numeric(datosRestaurante$tiemposSec)
+plotdist(datosRestaurante$tiemposSec,histo=TRUE,demp=TRUE)
+```
+Puede que se distribuya como una normal si nos basamos en el diagrama de densidad.
+
+```{r}
+descdist(datosRestaurante$tiemposSec)
+```
+Se puede ver que los datos estan cerca de la distribucion logistic, normal, lognormal y gamma asi que haremos el analisis de distribucion sobre estas.
+
+
+```{r warning=FALSE, error=FALSE}
+fit_logis <- fitdist(datosRestaurante$tiemposSec,"logis")
+fit_norm <- fitdist(datosRestaurante$tiemposSec,"norm")
+fit_lnorm <- fitdist(datosRestaurante$tiemposSec,"lnorm")
+fit_gamma <- fitdist(datosRestaurante$tiemposSec,"gamma")
+
+```
+
+```{r}
+par(mfrow=c(2,2))
+plot.legend <- c("norm","unif","gamma","lnorm")
+denscomp(list(fit_logis,fit_norm,fit_lnorm,fit_gamma), legendtext = plot.legend)
+cdfcomp (list(fit_logis,fit_norm,fit_lnorm,fit_gamma), legendtext = plot.legend)
+qqcomp (list(fit_logis,fit_norm,fit_lnorm,fit_gamma), legendtext = plot.legend)
+ppcomp (list(fit_logis,fit_norm,fit_lnorm,fit_gamma), legendtext = plot.legend)
+```
+Diria que las que mas se ajustan serian la distribucion gamma y la distribucion normal.
+
+### Prueba de hipotesis
+Se llevará a cabo una prueba de Kolmogorov-Smirnov con un nivel de confianza del 95%, n=29 utilizando un valor crítico de D=0.240, esto con el fin de determinar si los datos si se distribuyen como tales distribuciones
+
+```{r}
+gofstat(list(fit_logis,fit_norm,fit_lnorm,fit_gamma))
+```
+Ninguna de las distribuciones es decartada por medio de la prueba Kolmogorov Smirnov asi que nos basaremos completamente en la prueba de la informacion, dando esto como resultado decidir que los datos se distribuyen como logistic
+
+
