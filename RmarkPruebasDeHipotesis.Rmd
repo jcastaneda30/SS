@@ -60,10 +60,9 @@ descdist(tiemposEntreLlegadasSec)
 ```
 Se puede ver que los datos estan cerca tanto de la distribucion gamma como de la distribucion exponencial asi que sobre esas dos haremos las pruebas respectivas para ver cual es la mas adecuada.
 
-```{r}
+```{r warning=FALSE}
 fit_gamma <- fitdist(tiemposEntreLlegadasSec,"gamma")
 fit_exp <- fitdist(tiemposEntreLlegadasSec,"exp")
-
 ```
 
 ```{r}
@@ -84,7 +83,7 @@ Observando las gráficas, se puede notar que la distribución exponencial se ase
 ```{r}
 gofstat(list(fit_gamma,fit_exp))
 ```
-Como se puede ver los datos se distribuyen como ambas distribuciones, por lo tanto se usaran los criterios de la informacion para determinar cual distribucion se usara en el modelo, siendo esta la distribucion exponencial.
+Como se puede ver los datos se distribuyen como ambas distribuciones, por lo tanto se usaran los criterios de Akaike y Bayesiano para determinar cual distribucion se usara en el modelo, siendo esta la distribucion exponencial.
 
 ```{r}
 summary(fit_exp)
@@ -137,6 +136,7 @@ Se descarta la distribucion uniforme por el criterio de Kolmogorov-Smirnov y par
 summary(fit_normal)
 ```
 
+
 # Tiempo de servicio
 
 Aqui el tiempo de servicio se divide en dos categorias aquellas en las que el pedido debe ser enviado a la cocina y aquellos donde compran algo y se les entrega sin tener que esperar demasiado a esta categoria se le llama estante.
@@ -177,6 +177,7 @@ fit_gamma <- fitdist(datosEstante$tiemposSec,"gamma")
 plot(fit_gamma)
 
 ```
+
 Si, los datos se ven bastante cerca de la distribucion gamma, ahora haremos la Prueba de bondad de ajuste.
 
 ### Prueba de bondad de ajuste
@@ -185,11 +186,15 @@ Se llevará a cabo una prueba de Kolmogorov-Smirnov con un nivel de confianza de
 ```{r}
 gofstat(fit_gamma)
 ```
+
 Se puede decir que los datos se distribuyen como Gamma ya que estan dentro del area de no rechazo en la prueba Kolmogorov.
+
 
 ```{r}
 summary(fit_gamma)
 ```
+
+
 ## Tiempo de servicio para el area del restaurante
 
 Esto se refiere a cuanto tiempo se tarda en entregarle el producto a alguien que va a comprar algo del estante tipo mecato y similares que ya estan hechos.
@@ -201,11 +206,13 @@ datosRestaurante <- datosASeparar[datosASeparar$tipo=="restaurante",]
 datosRestaurante$tiemposSec <- as.numeric(datosRestaurante$tiemposSec)
 plotdist(datosRestaurante$tiemposSec,histo=TRUE,demp=TRUE)
 ```
+
 Puede que se distribuya como una normal si nos basamos en el diagrama de densidad.
 
 ```{r}
 descdist(datosRestaurante$tiemposSec)
 ```
+
 Se puede ver que los datos estan cerca de la distribucion logistic, normal, lognormal y gamma asi que haremos el analisis de distribucion sobre estas.
 
 
@@ -225,6 +232,7 @@ cdfcomp (list(fit_logis,fit_norm,fit_lnorm,fit_gamma), legendtext = plot.legend)
 qqcomp (list(fit_logis,fit_norm,fit_lnorm,fit_gamma), legendtext = plot.legend)
 ppcomp (list(fit_logis,fit_norm,fit_lnorm,fit_gamma), legendtext = plot.legend)
 ```
+
 Diria que las que mas se ajustan serian la distribucion gamma y la distribucion normal.
 
 ### Prueba de bondad de ajuste
@@ -233,22 +241,11 @@ Se llevará a cabo una prueba de Kolmogorov-Smirnov con un nivel de confianza de
 ```{r}
 gofstat(list(fit_logis,fit_norm,fit_lnorm,fit_gamma))
 ```
-Ninguna de las distribuciones es decartada por medio de la prueba Kolmogorov Smirnov asi que nos basaremos completamente en la prueba de la informacion, e incluso si usamos el criterio grafico la normal y la logistic se ven bastante similares dando esto como resultado decidir que los datos se distribuyen como logistic
+
+Ninguna de las distribuciones es decartada por medio de la prueba Kolmogorov Smirnov asi que nos basaremos en los criterios Akaike y Bayesiano, e incluso si usamos el criterio grafico la normal y la logistic se ven bastante similares dando esto como resultado decidir que los datos se distribuyen como normal debido a que simul8 no tiene la distribucion logistic
 
 ```{r}
-summary(fit_logis)
-```
-
-```{r}
-datos$Le.entregan.el.pedido <- as.POSIXlt(datos$Le.entregan.el.pedido, format = "%H:%M:%S")
-
-cortar<-datos[datos$Tipo=="estante",]
-
-tiempoTotalEnElsistemas<-as.numeric(difftime(cortar$Le.entregan.el.pedido, cortar$Tiempo.de.llegada, units = "secs"))
-
-mean(tiempoTotalEnElsistemas/60)
-tiempoTotalEnElsistemas
-
+summary(fit_norm)
 ```
 
 # Calculo de tamaños de muestra para las respectivas variables
