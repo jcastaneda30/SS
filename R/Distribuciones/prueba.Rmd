@@ -86,6 +86,9 @@ gofstat(list(fit_gamma,fit_exp))
 ```
 Como se puede ver los datos se distribuyen como ambas distribuciones, por lo tanto se usaran los criterios de la informacion para determinar cual distribucion se usara en el modelo, siendo esta la distribucion exponencial.
 
+```{r}
+summary(fit_exp)
+```
 
 # Tiempo de pedido
 Esta variable trata sobre cuanto tiempo tarda una persona en hacer su pedido sin tener en cuenta que tipo de pedido esta realizando.
@@ -129,6 +132,10 @@ gofstat(list(fit_normal,fit_unif,fit_gamma,fit_lnorm))
 ```
 
 Se descarta la distribucion uniforme por el criterio de Kolmogorov-Smirnov y para determinar cual es la distribucion mas adecuada nos basaremos en el criterio visual ya que sus resultados son bastante similares dando por escogida la distribucion normal.
+
+```{r}
+summary(fit_normal)
+```
 
 # Tiempo de servicio
 
@@ -180,7 +187,9 @@ gofstat(fit_gamma)
 ```
 Se puede decir que los datos se distribuyen como Gamma ya que estan dentro del area de no rechazo en la prueba Kolmogorov.
 
-
+```{r}
+summary(fit_gamma)
+```
 ## Tiempo de servicio para el area del restaurante
 
 Esto se refiere a cuanto tiempo se tarda en entregarle el producto a alguien que va a comprar algo del estante tipo mecato y similares que ya estan hechos.
@@ -226,4 +235,6 @@ gofstat(list(fit_logis,fit_norm,fit_lnorm,fit_gamma))
 ```
 Ninguna de las distribuciones es decartada por medio de la prueba Kolmogorov Smirnov asi que nos basaremos completamente en la prueba de la informacion, dando esto como resultado decidir que los datos se distribuyen como logistic
 
-
+```{r}
+summary(fit_logis)
+```
