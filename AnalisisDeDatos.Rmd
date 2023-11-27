@@ -1,22 +1,35 @@
 ---
 title: "Analisis de datos trabajo simulacion"
-output: 
-  html_document:
+header-includes:
+- \usepackage[utf8]{inputenc}
+- \setlength{\parindent}{0cm}
+- \usepackage{amsmath}
+- \usepackage{array}
+- \usepackage{float}
+- \usepackage{multirow}
+- \usepackage[spanish, es-tabla]{babel}\decimalpoint
+output:
+  pdf_document:
     toc: true
-    toc_float: true
-    toc_depth: 3  # upto three depths of headings (specified by #, ## and ###)
-    number_sections: true  ## if you want number sections at each table header
-    theme: united  # many options for theme, this one is my favorite.
-    highlight: tango  # specifies the syntax highlighting style
+    number_sections: yes
+fontsize: 10pt
+papersize: letter
+geometry: margin = 1in
+language: es
+editor_options:
+  markdown:
+    wrap: 72
 ---
+
 Autores:
-Maria Fernanda Calle Agudelo - mcalleag@unal.edu.co\n
 
-Jaider Castañeda Villa - jcastanedavi@unal.edu.co\n
+Maria Fernanda Calle Agudelo - mcalleag@unal.edu.co
 
-Mónica Sofía Restrepo León - morestrepol@unal.edu.co\n
+Jaider Castañeda Villa - jcastanedavi@unal.edu.co
 
-Luis Alejandro Varela Ojeda - luvarelao@unal.edu.co\n
+Mónica Sofía Restrepo León - morestrepol@unal.edu.co
+
+Luis Alejandro Varela Ojeda - luvarelao@unal.edu.co
 
 # Introduccion
 
@@ -309,4 +322,5 @@ Las probabilidades de los productos del restaurante
 probRestaurante <- datos[datos$Tipo=="restaurante",]
 tableProbRest <- table(probRestaurante$Tipo.de.pedido)
 tableProbRest/sum(tableProbRest)
+
 ```
